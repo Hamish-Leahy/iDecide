@@ -1,38 +1,15 @@
-//
-//  PersonalLegacyView.swift
-//  iDecide
-//
-//  Created by hamish leahy on 17/8/2024.
-//
-
 import SwiftUI
 import CoreData
 
 struct PersonalLegacyView: View {
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
-    
-    let subsections = [
-        PersonalLegacySubsection(title: "Life Story", icon: "book.fill", color: .blue),
-        PersonalLegacySubsection(title: "Favorite Memories", icon: "photo.fill", color: .green),
-        PersonalLegacySubsection(title: "Personal Values", icon: "heart.fill", color: .red),
-        PersonalLegacySubsection(title: "Legacy Letters", icon: "envelope.fill", color: .orange),
-        PersonalLegacySubsection(title: "Genealogy", icon: "person.3.fill", color: .purple),
-        PersonalLegacySubsection(title: "Legacy Videos", icon: "video.fill", color: .pink)
-    ]
+    private let subsections = PersonalLegacySubsection.allSubsections
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                welcomeSection
-                
-                LazyVGrid(columns: columns, spacing: 20) {
-                    ForEach(subsections) { subsection in
-                        NavigationLink(destination: PersonalLegacySubsectionView(title: subsection.title)) {
-                            PersonalLegacySubsectionCard(subsection: subsection)
-                        }
-                    }
-                }
-                .padding(.horizontal)
+                WelcomeSection()
+                SubsectionsGrid(subsections: subsections)
             }
             .padding(.vertical)
         }
@@ -40,8 +17,10 @@ struct PersonalLegacyView: View {
         .navigationTitle("Personal Legacy")
         .navigationBarTitleDisplayMode(.large)
     }
-    
-    private var welcomeSection: some View {
+}
+
+struct WelcomeSection: View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Personal Legacy")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
@@ -58,19 +37,34 @@ struct PersonalLegacyView: View {
     }
 }
 
+struct SubsectionsGrid: View {
+    let subsections: [PersonalLegacySubsection]
+    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 20) {
+            ForEach(subsections) { subsection in
+                NavigationLink(destination: PersonalLegacySubsectionView(title: subsection.title)) {
+                    PersonalLegacySubsectionCard(subsection: subsection)
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
 struct PersonalLegacySubsectionView: View {
     let title: String
     @State private var content: String = ""
-    @State private var isShowingDocumentPicker = false
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                PersonalLegacySectionDivider(title: "Description")
-                Text(getDescription(for: title))
+                SectionDivider(title: "Description")
+                Text(PersonalLegacyContent.getDescription(for: title))
                     .font(.system(size: 16, weight: .regular, design: .rounded))
                 
-                PersonalLegacySectionDivider(title: "Your \(title)")
+                SectionDivider(title: "Your \(title)")
                 TextEditor(text: $content)
                     .frame(height: 200)
                     .padding()
@@ -78,47 +72,18 @@ struct PersonalLegacySubsectionView: View {
                     .cornerRadius(10)
                 
                 if title == "Legacy Letters" {
-                    PersonalLegacySectionDivider(title: "Recipients")
+                    SectionDivider(title: "Recipients")
                     PeopleListView()
                 } else if title == "Legacy Videos" {
-                    PersonalLegacySectionDivider(title: "Videos")
+                    SectionDivider(title: "Videos")
                     VideoListView()
                 }
                 
-                Button(action: {
-                    // Save content action
-                }) {
-                    Text("Save")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                }
+                SaveButton()
             }
             .padding()
         }
         .navigationTitle(title)
-    }
-    
-    func getDescription(for title: String) -> String {
-        switch title {
-        case "Life Story":
-            return "Write about the key events and milestones in your life. Share your personal journey, challenges overcome, and lessons learned."
-        case "Favorite Memories":
-            return "Describe your most cherished memories. What made them special? Who was involved? How did these moments shape you?"
-        case "Personal Values":
-            return "Reflect on the core values that guide your life. Explain why they're important to you and how they've influenced your decisions."
-        case "Legacy Letters":
-            return "Write heartfelt messages to your loved ones. Express your feelings, share wisdom, or offer guidance for the future."
-        case "Genealogy":
-            return "Document your family history. Include stories about your ancestors, family traditions, and your place in the family tree."
-        case "Legacy Videos":
-            return "Record videos sharing your life stories, wisdom, or messages for future generations."
-        default:
-            return ""
-        }
     }
 }
 
@@ -129,28 +94,47 @@ struct PeopleListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(people, id: \.self) { person in
-                Text(person)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(10)
+                PersonRow(name: person)
             }
             
-            HStack {
-                TextField("Add new person", text: $newPerson)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                Button(action: {
-                    if !newPerson.isEmpty {
-                        people.append(newPerson)
-                        newPerson = ""
-                    }
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.blue)
-                }
+            AddPersonRow(newPerson: $newPerson, people: $people)
+        }
+    }
+}
+
+struct PersonRow: View {
+    let name: String
+    
+    var body: some View {
+        Text(name)
+            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
+    }
+}
+
+struct AddPersonRow: View {
+    @Binding var newPerson: String
+    @Binding var people: [String]
+    
+    var body: some View {
+        HStack {
+            TextField("Add new person", text: $newPerson)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            
+            Button(action: addPerson) {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundColor(.blue)
             }
+        }
+    }
+    
+    private func addPerson() {
+        if !newPerson.isEmpty {
+            people.append(newPerson)
+            newPerson = ""
         }
     }
 }
@@ -162,33 +146,52 @@ struct VideoListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(videos, id: \.self) { video in
-                Text(video)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(10)
+                VideoRow(title: video)
             }
             
-            HStack {
-                TextField("Add new video", text: $newVideo)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                Button(action: {
-                    if !newVideo.isEmpty {
-                        videos.append(newVideo)
-                        newVideo = ""
-                    }
-                }) {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.blue)
-                }
-            }
+            AddVideoRow(newVideo: $newVideo, videos: $videos)
         }
     }
 }
 
-struct PersonalLegacySectionDivider: View {
+struct VideoRow: View {
+    let title: String
+    
+    var body: some View {
+        Text(title)
+            .font(.system(size: 16, weight: .medium, design: .rounded))
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
+    }
+}
+
+struct AddVideoRow: View {
+    @Binding var newVideo: String
+    @Binding var videos: [String]
+    
+    var body: some View {
+        HStack {
+            TextField("Add new video", text: $newVideo)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            
+            Button(action: addVideo) {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundColor(.blue)
+            }
+        }
+    }
+    
+    private func addVideo() {
+        if !newVideo.isEmpty {
+            videos.append(newVideo)
+            newVideo = ""
+        }
+    }
+}
+
+struct SectionDivider: View {
     let title: String
     
     var body: some View {
@@ -205,11 +208,36 @@ struct PersonalLegacySectionDivider: View {
     }
 }
 
+struct SaveButton: View {
+    var body: some View {
+        Button(action: {
+            // Save content action
+        }) {
+            Text("Save")
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .foregroundColor(.white)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .cornerRadius(10)
+        }
+    }
+}
+
 struct PersonalLegacySubsection: Identifiable {
     let id = UUID()
     let title: String
     let icon: String
     let color: Color
+    
+    static let allSubsections = [
+        PersonalLegacySubsection(title: "Life Story", icon: "book.fill", color: .blue),
+        PersonalLegacySubsection(title: "Favorite Memories", icon: "photo.fill", color: .green),
+        PersonalLegacySubsection(title: "Personal Values", icon: "heart.fill", color: .red),
+        PersonalLegacySubsection(title: "Legacy Letters", icon: "envelope.fill", color: .orange),
+        PersonalLegacySubsection(title: "Genealogy", icon: "person.3.fill", color: .purple),
+        PersonalLegacySubsection(title: "Legacy Videos", icon: "video.fill", color: .pink)
+    ]
 }
 
 struct PersonalLegacySubsectionCard: View {
@@ -235,5 +263,26 @@ struct PersonalLegacySubsectionCard: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(15)
         .shadow(radius: 5)
+    }
+}
+
+enum PersonalLegacyContent {
+    static func getDescription(for title: String) -> String {
+        switch title {
+        case "Life Story":
+            return "Write about the key events and milestones in your life. Share your personal journey, challenges overcome, and lessons learned."
+        case "Favorite Memories":
+            return "Describe your most cherished memories. What made them special? Who was involved? How did these moments shape you?"
+        case "Personal Values":
+            return "Reflect on the core values that guide your life. Explain why they're important to you and how they've influenced your decisions."
+        case "Legacy Letters":
+            return "Write heartfelt messages to your loved ones. Express your feelings, share wisdom, or offer guidance for the future."
+        case "Genealogy":
+            return "Document your family history. Include stories about your ancestors, family traditions, and your place in the family tree."
+        case "Legacy Videos":
+            return "Record videos sharing your life stories, wisdom, or messages for future generations."
+        default:
+            return ""
+        }
     }
 }
