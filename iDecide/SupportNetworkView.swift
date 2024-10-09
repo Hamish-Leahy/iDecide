@@ -2,48 +2,44 @@
 //  SupportNetworkView.swift
 //  iDecide
 //
-//  Created by hamish leahy on 06/10/2024.
+//  Created by hamish leahy on 22/9/2024.
 //
 
-import Foundation
 import SwiftUI
 
 struct SupportNetworkView: View {
-    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    @State private var name = ""
+    @State private var email = ""
+    @State private var phone = ""
+    @State private var preferredContactMethod = "Email"
+    @State private var counselingReason = ""
+    @State private var preferredCounselorGender = "No Preference"
+    @State private var isSubmitted = false
     
-    let subsections = [
-        SupportSubsection(title: "Important Contacts", icon: "person.crop.circle"),
-        SupportSubsection(title: "Support Groups", icon: "person.3.fill"),
-        SupportSubsection(title: "Caregivers", icon: "heart.circle"),
-        SupportSubsection(title: "Professional Help", icon: "briefcase")
-    ]
+    let contactMethods = ["Email", "Phone", "Text"]
+    let counselorGenders = ["No Preference", "Male", "Female", "Non-binary"]
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                welcomeSection
-                
-                LazyVGrid(columns: columns, spacing: 20) {
-                    ForEach(subsections) { subsection in
-                        NavigationLink(destination: SupportSubsectionView(title: subsection.title)) {
-                            SupportSubsectionCard(subsection: subsection)
-                        }
-                    }
-                }
-                .padding(.horizontal)
+                headerSection
+                AnytimeCounselingForm
+                otherServicesSection
             }
-            .padding(.vertical)
+            .padding()
         }
         .background(Color(.systemBackground).edgesIgnoringSafeArea(.all))
         .navigationTitle("Support Network")
-        .navigationBarTitleDisplayMode(.large)
+        .alert(isPresented: $isSubmitted) {
+            Alert(title: Text("Form Submitted"),
+                  message: Text("Thank you for your interest in AnytimeCounseling. A counselor will contact you shortly."),
+                  dismissButton: .default(Text("OK")))
+        }
     }
     
-    private var welcomeSection: some View {
+    private var headerSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Support Network")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
-            Text("Connect with your support system")
+            Text("Connect with your support system and get help when you need it")
                 .font(.system(size: 16, weight: .medium, design: .rounded))
                 .foregroundColor(.secondary)
         }
@@ -52,50 +48,124 @@ struct SupportNetworkView: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(15)
         .shadow(radius: 5)
-        .padding(.horizontal)
     }
-}
-
-struct SupportSubsection: Identifiable {
-    let id = UUID()
-    let title: String
-    let icon: String
-}
-
-struct SupportSubsectionCard: View {
-    let subsection: SupportSubsection
     
-    var body: some View {
-        VStack {
-            Image(systemName: subsection.icon)
-                .font(.system(size: 30))
-                .foregroundColor(.white)
-                .frame(width: 60, height: 60)
-                .background(Color.pink)
-                .clipShape(Circle())
+    private var AnytimeCounselingForm: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("AnytimeCounseling Request Form")
+                .font(.headline)
             
-            Text(subsection.title)
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .multilineTextAlignment(.center)
-                .foregroundColor(.primary)
+            TextField("Name", text: $name)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            
+            TextField("Email", text: $email)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .keyboardType(.emailAddress)
+            
+            TextField("Phone", text: $phone)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .keyboardType(.phonePad)
+            
+            Picker("Preferred Contact Method", selection: $preferredContactMethod) {
+                ForEach(contactMethods, id: \.self) {
+                    Text($0)
+                }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            
+            TextField("Reason for Counseling", text: $counselingReason)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            
+            Picker("Preferred Counselor Gender", selection: $preferredCounselorGender) {
+                ForEach(counselorGenders, id: \.self) {
+                    Text($0)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            
+            Button(action: submitForm) {
+                Text("Submit Request")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(10)
+            }
         }
-        .frame(height: 120)
-        .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(15)
-        .shadow(radius: 5)
+    }
+    
+    private var otherServicesSection: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Other Support Services")
+                .font(.headline)
+                .padding(.bottom, 5)
+            
+            ForEach(supportServices, id: \.name) { service in
+                SupportServiceRow(service: service)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(15)
+    }
+    
+    private func submitForm() {
+        // Here you would typically send this information to your backend or AnytimeCounseling's API
+        print("Form submitted with: Name: \(name), Email: \(email), Phone: \(phone), Preferred Contact: \(preferredContactMethod), Reason: \(counselingReason), Preferred Counselor Gender: \(preferredCounselorGender)")
+        isSubmitted = true
+        
+        // Clear the form
+        name = ""
+        email = ""
+        phone = ""
+        preferredContactMethod = "Email"
+        counselingReason = ""
+        preferredCounselorGender = "No Preference"
     }
 }
 
-struct SupportSubsectionView: View {
-    let title: String
+struct SupportService {
+    let name: String
+    let description: String
+    let icon: String
+}
+
+struct SupportServiceRow: View {
+    let service: SupportService
     
     var body: some View {
-        Text("Details for \(title)")
-            .navigationTitle(title)
+        HStack(spacing: 15) {
+            Image(systemName: service.icon)
+                .foregroundColor(.blue)
+                .font(.system(size: 24))
+                .frame(width: 30, height: 30)
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text(service.name)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                Text(service.description)
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
     }
 }
+
+let supportServices = [
+    SupportService(name: "24/7 Crisis Hotline", description: "Immediate support for emotional crises", icon: "phone.fill"),
+    SupportService(name: "Grief Support Group", description: "Weekly meetings for those dealing with loss", icon: "person.3.fill"),
+    SupportService(name: "Financial Counseling", description: "Guidance on managing estate and finances", icon: "dollarsign.circle.fill"),
+    SupportService(name: "Legal Aid", description: "Free legal advice for estate planning", icon: "book.fill")
+]
 
 struct SupportNetworkView_Previews: PreviewProvider {
     static var previews: some View {
