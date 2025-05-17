@@ -83,14 +83,11 @@ export function BudgetTracker() {
         let categories: BudgetCategory[] = [];
         
         if (planData?.funding_categories) {
-          console.log("Loaded funding categories from database:", planData.funding_categories);
-          
           categories = planData.funding_categories.map((cat: any) => {
             const amount = parseFloat(cat.amount);
             const used = parseFloat(cat.used);
             const remaining = amount - used;
             const percentUsed = amount > 0 ? (used / amount) * 100 : 0;
-            
             return {
               category: cat.category,
               amount: amount.toFixed(2),
@@ -100,32 +97,8 @@ export function BudgetTracker() {
             };
           });
         } else {
-          // Mock data for demonstration if no plan exists
-          categories = [
-            {
-              category: 'Core',
-              amount: '25000.00',
-              used: '8500.00',
-              remaining: '16500.00',
-              percentUsed: 34
-            },
-            {
-              category: 'Capacity Building',
-              amount: '15000.00',
-              used: '4200.00',
-              remaining: '10800.00',
-              percentUsed: 28
-            },
-            {
-              category: 'Capital',
-              amount: '8500.00',
-              used: '1200.00',
-              remaining: '7300.00',
-              percentUsed: 14
-            }
-          ];
+          categories = [];
         }
-        
         setBudgetCategories(categories);
         
         // Set initial form category if categories exist
@@ -136,82 +109,13 @@ export function BudgetTracker() {
           }));
         }
         
-        // Mock transactions for demonstration
-        // In a real app, you would fetch these from a transactions table
-        const mockTransactions: Transaction[] = [
-          {
-            id: '1',
-            date: '2025-04-15',
-            provider: 'Sunshine Support Services',
-            service: 'Personal Care',
-            category: 'Core',
-            amount: 120.00,
-            status: 'processed',
-            notes: 'Weekly personal care support'
-          },
-          {
-            id: '2',
-            date: '2025-04-12',
-            provider: 'Therapy Connect',
-            service: 'Occupational Therapy',
-            category: 'Capacity Building',
-            amount: 180.00,
-            status: 'processed',
-            notes: 'Initial assessment'
-          },
-          {
-            id: '3',
-            date: '2025-04-10',
-            provider: 'Mobility Solutions',
-            service: 'Assistive Technology',
-            category: 'Capital',
-            amount: 450.00,
-            status: 'processed',
-            notes: 'Wheelchair maintenance'
-          },
-          {
-            id: '4',
-            date: '2025-04-08',
-            provider: 'Community Inclusion Group',
-            service: 'Community Access',
-            category: 'Core',
-            amount: 95.00,
-            status: 'processed',
-            notes: 'Community outing'
-          },
-          {
-            id: '5',
-            date: '2025-04-05',
-            provider: 'Sunshine Support Services',
-            service: 'Personal Care',
-            category: 'Core',
-            amount: 120.00,
-            status: 'processed',
-            notes: 'Weekly personal care support'
-          },
-          {
-            id: '6',
-            date: '2025-04-02',
-            provider: 'Therapy Connect',
-            service: 'Speech Therapy',
-            category: 'Capacity Building',
-            amount: 160.00,
-            status: 'processed',
-            notes: 'Regular session'
-          },
-          {
-            id: '7',
-            date: '2025-04-20',
-            provider: 'Home Care Plus',
-            service: 'Cleaning',
-            category: 'Core',
-            amount: 85.00,
-            status: 'pending',
-            notes: 'Scheduled cleaning service'
-          }
-        ];
-        
-        setTransactions(mockTransactions);
+        // Load transactions from Supabase
+        const { data: transactionsData, error: transactionsError } = await supabase
+          .from('ndis_transactions')
+          .select('*')
+          .eq('user_id', user.id);
+        if (transactionsError) throw transactionsError;
+        setTransactions(transactionsData || []);
       } catch (err) {
         console.error('Error loading budget data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load budget data');

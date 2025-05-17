@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Clock,
   CheckCircle2
-} from 'lucide-react';
+} 
+
+from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../common/Card';
@@ -104,47 +106,20 @@ export function NDISDashboard() {
           });
         }
         
-        // Mock service providers for now
-        // In a real app, you would fetch these from a service_providers table
-        setProviders([
-          {
-            id: '1',
-            name: 'Sunshine Support Services',
-            services: ['Personal Care', 'Community Access'],
-            status: 'active'
-          },
-          {
-            id: '2',
-            name: 'Mobility Solutions',
-            services: ['Assistive Technology', 'Home Modifications'],
-            status: 'active'
-          },
-          {
-            id: '3',
-            name: 'Therapy Connect',
-            services: ['Occupational Therapy', 'Speech Therapy'],
-            status: 'active'
-          }
-        ]);
-        
-        // Mock upcoming appointments
-        // In a real app, you would fetch these from an appointments table
-        setUpcomingAppointments([
-          {
-            id: '1',
-            title: 'Occupational Therapy Session',
-            provider: 'Therapy Connect',
-            date: new Date(Date.now() + 86400000 * 2), // 2 days from now
-            location: 'Therapy Connect Office'
-          },
-          {
-            id: '2',
-            title: 'Plan Review Meeting',
-            provider: 'NDIS',
-            date: new Date(Date.now() + 86400000 * 14), // 14 days from now
-            location: 'NDIS Office'
-          }
-        ]);
+        // Load service providers from Supabase
+        const { data: providersData, error: providersError } = await supabase
+          .from('ndis_service_providers')
+          .select('*')
+          .eq('user_id', user.id);
+        if (providersError) throw providersError;
+        setProviders(providersData || []);
+        // Load upcoming appointments from Supabase
+        const { data: appointmentsData, error: appointmentsError } = await supabase
+          .from('ndis_appointments')
+          .select('*')
+          .eq('user_id', user.id);
+        if (appointmentsError) throw appointmentsError;
+        setUpcomingAppointments(appointmentsData || []);
         
       } catch (err) {
         console.error('Error loading NDIS data:', err);

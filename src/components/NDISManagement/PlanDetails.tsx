@@ -73,23 +73,17 @@ export function PlanDetails() {
           throw error;
         }
         
-        // For demo purposes, create mock data if no plan exists
         if (data) {
           const planData = {
             id: data.id,
-            ndis_number: data.ndis_number || '12345678901',
-            plan_start_date: data.plan_start_date || '2025-01-01',
-            plan_end_date: data.plan_end_date || '2025-12-31',
-            plan_manager: data.plan_manager || 'agency',
+            ndis_number: data.ndis_number || '',
+            plan_start_date: data.plan_start_date || '',
+            plan_end_date: data.plan_end_date || '',
+            plan_manager: data.plan_manager || '',
             support_coordinator: data.support_coordinator,
-            funding_categories: data.funding_categories || [
-              { category: 'Core', amount: '25000', used: '8500' },
-              { category: 'Capacity Building', amount: '15000', used: '4200' },
-              { category: 'Capital', amount: '8500', used: '1200' }
-            ],
+            funding_categories: data.funding_categories || [],
             notes: data.notes
           };
-          
           setPlan(planData);
           setFormData({
             ndis_number: planData.ndis_number,
@@ -101,31 +95,19 @@ export function PlanDetails() {
             funding_categories: planData.funding_categories
           });
         } else {
-          // Mock data for demonstration
-          const mockPlan = {
-            id: 'mock-plan',
-            ndis_number: '12345678901',
-            plan_start_date: '2025-01-01',
-            plan_end_date: '2025-12-31',
-            plan_manager: 'agency',
-            support_coordinator: 'Jane Smith',
-            funding_categories: [
-              { category: 'Core', amount: '25000', used: '8500' },
-              { category: 'Capacity Building', amount: '15000', used: '4200' },
-              { category: 'Capital', amount: '8500', used: '1200' }
-            ],
-            notes: 'This is a mock NDIS plan for demonstration purposes.'
-          };
-          
-          setPlan(mockPlan);
+          setPlan(null);
           setFormData({
-            ndis_number: mockPlan.ndis_number,
-            plan_start_date: mockPlan.plan_start_date,
-            plan_end_date: mockPlan.plan_end_date,
-            plan_manager: mockPlan.plan_manager,
-            support_coordinator: mockPlan.support_coordinator || '',
-            notes: mockPlan.notes || '',
-            funding_categories: mockPlan.funding_categories
+            ndis_number: '',
+            plan_start_date: '',
+            plan_end_date: '',
+            plan_manager: 'agency',
+            support_coordinator: '',
+            notes: '',
+            funding_categories: [
+              { category: 'Core', amount: '', used: '' },
+              { category: 'Capacity Building', amount: '', used: '' },
+              { category: 'Capital', amount: '', used: '' }
+            ]
           });
         }
       } catch (err) {

@@ -127,95 +127,21 @@ export function ServiceAgreements() {
         
         setParticipants(finalParticipants);
         
-        // For providers, we'll use a mock dataset for now
-        // In a real app, you'd fetch this from a dedicated providers table
-        const mockProviders: Provider[] = [
-          {
-            id: '1',
-            name: 'Sunshine Support Services',
-            services: ['Personal Care', 'Community Access']
-          },
-          {
-            id: '2',
-            name: 'Therapy Connect',
-            services: ['Occupational Therapy', 'Speech Therapy', 'Physiotherapy']
-          },
-          {
-            id: '3',
-            name: 'Mobility Solutions',
-            services: ['Assistive Technology', 'Home Modifications']
-          },
-          {
-            id: '4',
-            name: 'Community Inclusion Group',
-            services: ['Community Access', 'Social Support']
-          }
-        ];
+        // Load providers from Supabase
+        const { data: providersData, error: providersError } = await supabase
+          .from('ndis_service_providers')
+          .select('*')
+          .eq('user_id', user.id);
+        if (providersError) throw providersError;
+        setProviders(providersData || []);
         
-        setProviders(mockProviders);
-        
-        // Load service agreements
-        // In a real app, you'd have a dedicated service_agreements table
-        // For now, we'll generate sample data
-        const sampleAgreements: ServiceAgreement[] = [
-          {
-            id: '1',
-            participant_id: finalParticipants[0]?.id || '1',
-            participant_name: finalParticipants[0]?.name || 'John Smith',
-            provider_id: '1',
-            provider_name: 'Sunshine Support Services',
-            start_date: '2025-01-15',
-            end_date: '2025-07-15',
-            total_amount: '15000',
-            services: ['Personal Care', 'Community Access'],
-            status: 'active',
-            signed_date: '2025-01-10',
-            signed_by: 'John Smith',
-            notes: 'Weekly personal care and community access services'
-          },
-          {
-            id: '2',
-            participant_id: finalParticipants[1]?.id || '2',
-            participant_name: finalParticipants[1]?.name || 'Emma Wilson',
-            provider_id: '2',
-            provider_name: 'Therapy Connect',
-            start_date: '2025-02-01',
-            end_date: '2025-08-01',
-            total_amount: '8500',
-            services: ['Occupational Therapy', 'Speech Therapy'],
-            status: 'active',
-            signed_date: '2025-01-25',
-            signed_by: 'Emma Wilson'
-          },
-          {
-            id: '3',
-            participant_id: finalParticipants[0]?.id || '1',
-            participant_name: finalParticipants[0]?.name || 'John Smith',
-            provider_id: '3',
-            provider_name: 'Mobility Solutions',
-            start_date: '2025-03-01',
-            end_date: '2025-09-01',
-            total_amount: '12500',
-            services: ['Assistive Technology'],
-            status: 'draft'
-          },
-          {
-            id: '4',
-            participant_id: finalParticipants[2]?.id || '3',
-            participant_name: finalParticipants[2]?.name || 'Michael Chen',
-            provider_id: '4',
-            provider_name: 'Community Inclusion Group',
-            start_date: '2024-10-15',
-            end_date: '2025-04-15',
-            total_amount: '9800',
-            services: ['Community Access', 'Social Support'],
-            status: 'expired',
-            signed_date: '2024-10-10',
-            signed_by: 'Michael Chen'
-          }
-        ];
-        
-        setAgreements(sampleAgreements);
+        // Load service agreements from Supabase
+        const { data: agreementsData, error: agreementsError } = await supabase
+          .from('ndis_service_agreements')
+          .select('*')
+          .eq('user_id', user.id);
+        if (agreementsError) throw agreementsError;
+        setAgreements(agreementsData || []);
       } catch (err) {
         console.error('Error loading data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');

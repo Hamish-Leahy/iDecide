@@ -71,81 +71,21 @@ export function ServiceProviders() {
   useEffect(() => {
     const loadProviders = async () => {
       if (!user) return;
-      
       try {
         setLoading(true);
-        
-        // In a real app, you would fetch from a service_providers table
-        // For now, we'll use mock data
-        
-        // Mock service providers
-        const mockProviders: ServiceProvider[] = [
-          {
-            id: '1',
-            name: 'Sunshine Support Services',
-            services: ['Personal Care', 'Community Access'],
-            contact_name: 'Sarah Johnson',
-            phone: '0412 345 678',
-            email: 'contact@sunshinesupport.com.au',
-            address: '123 Main Street, Sydney NSW 2000',
-            agreement_status: 'active',
-            notes: 'Provides support workers Monday to Friday'
-          },
-          {
-            id: '2',
-            name: 'Mobility Solutions',
-            services: ['Assistive Technology', 'Home Modifications'],
-            contact_name: 'Michael Chen',
-            phone: '0423 456 789',
-            email: 'info@mobilitysolutions.com.au',
-            address: '45 Tech Lane, Melbourne VIC 3000',
-            agreement_status: 'active',
-            notes: 'Specializes in mobility equipment and home modifications'
-          },
-          {
-            id: '3',
-            name: 'Therapy Connect',
-            services: ['Occupational Therapy', 'Speech Therapy'],
-            contact_name: 'Emma Wilson',
-            phone: '0434 567 890',
-            email: 'admin@therapyconnect.com.au',
-            address: '78 Health Avenue, Brisbane QLD 4000',
-            agreement_status: 'pending',
-            notes: 'Provides both in-clinic and home visit therapy services'
-          },
-          {
-            id: '4',
-            name: 'Community Inclusion Group',
-            services: ['Community Access', 'Social Support'],
-            contact_name: 'David Thompson',
-            phone: '0445 678 901',
-            email: 'info@communityinclusion.org.au',
-            address: '90 Social Street, Perth WA 6000',
-            agreement_status: 'expired',
-            notes: 'Focuses on community participation and social activities'
-          },
-          {
-            id: '5',
-            name: 'Home Care Plus',
-            services: ['Cleaning', 'Meal Preparation', 'Personal Care'],
-            contact_name: 'Lisa Brown',
-            phone: '0456 789 012',
-            email: 'service@homecareplus.com.au',
-            address: '34 Care Road, Adelaide SA 5000',
-            agreement_status: 'active',
-            notes: 'Provides comprehensive in-home support services'
-          }
-        ];
-        
-        setProviders(mockProviders);
+        const { data, error } = await supabase
+          .from('ndis_service_providers')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setProviders(data || []);
       } catch (err) {
-        console.error('Error loading service providers:', err);
         setError(err instanceof Error ? err.message : 'Failed to load service providers');
       } finally {
         setLoading(false);
       }
     };
-    
     loadProviders();
   }, [user]);
 
@@ -178,9 +118,21 @@ export function ServiceProviders() {
     setShowEditModal(true);
   };
 
-  const handleDeleteProvider = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this service provider?')) {
-      setProviders(providers.filter(provider => provider.id !== id));
+  const handleDeleteProvider = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this service provider?')) return;
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('ndis_service_providers')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      setProviders(prev => prev.filter(provider => provider.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete provider');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -209,59 +161,70 @@ export function ServiceProviders() {
     });
   };
 
-  const handleSaveProvider = () => {
+  const handleSaveProvider = async () => {
     // Validate form
     if (!formData.name) {
       setError('Provider name is required');
       return;
     }
-    
     if (formData.services.some(service => !service)) {
       setError('All services must have a name');
       return;
     }
-    
-    // Filter out empty services
     const filteredServices = formData.services.filter(service => service);
-    
-    if (showEditModal && selectedProvider) {
-      // Update existing provider
-      const updatedProvider = {
-        ...selectedProvider,
-        name: formData.name,
-        services: filteredServices,
-        contact_name: formData.contact_name,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        agreement_status: formData.agreement_status,
-        notes: formData.notes
-      };
-      
-      setProviders(providers.map(provider => 
-        provider.id === selectedProvider.id ? updatedProvider : provider
-      ));
-      
-      setShowEditModal(false);
-    } else {
-      // Add new provider
-      const newProvider: ServiceProvider = {
-        id: Date.now().toString(),
-        name: formData.name,
-        services: filteredServices,
-        contact_name: formData.contact_name,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        agreement_status: formData.agreement_status,
-        notes: formData.notes
-      };
-      
-      setProviders([...providers, newProvider]);
-      setShowAddModal(false);
-    }
-    
     setError(null);
+    setLoading(true);
+    try {
+      if (showEditModal && selectedProvider) {
+        // Update existing provider
+        const { data, error } = await supabase
+          .from('ndis_service_providers')
+          .update({
+            name: formData.name,
+            services: filteredServices,
+            contact_name: formData.contact_name,
+            phone: formData.phone,
+            email: formData.email,
+            address: formData.address,
+            status: formData.agreement_status === 'active' ? 'active' : 'inactive',
+            agreement_status: formData.agreement_status,
+            notes: formData.notes
+          })
+          .eq('id', selectedProvider.id)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        if (error) throw error;
+        setProviders(prev => prev.map(p => p.id === selectedProvider.id ? data : p));
+        setShowEditModal(false);
+        setSelectedProvider(null);
+      } else {
+        // Add new provider
+        const { data, error } = await supabase
+          .from('ndis_service_providers')
+          .insert([{
+            user_id: user.id,
+            name: formData.name,
+            services: filteredServices,
+            contact_name: formData.contact_name,
+            phone: formData.phone,
+            email: formData.email,
+            address: formData.address,
+            status: formData.agreement_status === 'active' ? 'active' : 'inactive',
+            agreement_status: formData.agreement_status,
+            notes: formData.notes
+          }])
+          .select()
+          .single();
+        if (error) throw error;
+        setProviders(prev => [data, ...prev]);
+        setShowAddModal(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save provider');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {

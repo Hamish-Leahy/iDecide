@@ -97,7 +97,6 @@ export function SupportCoordination() {
             email: 'coordinator@example.com',
             notes: 'Your dedicated support coordinator to help manage your NDIS plan'
           });
-          
           setCoordinatorData({
             name: planData.support_coordinator,
             organization: 'NDIS Support Coordination Agency',
@@ -106,81 +105,23 @@ export function SupportCoordination() {
             notes: 'Your dedicated support coordinator to help manage your NDIS plan'
           });
         } else {
-          // Mock coordinator for demonstration
-          const mockCoordinator = {
-            id: '1',
-            name: 'Jane Smith',
-            organization: 'NDIS Support Coordination Agency',
-            phone: '0412 345 678',
-            email: 'jane.smith@ndiscoordination.com.au',
-            notes: 'Your dedicated support coordinator to help manage your NDIS plan'
-          };
-          
-          setCoordinator(mockCoordinator);
+          setCoordinator(null);
           setCoordinatorData({
-            name: mockCoordinator.name,
-            organization: mockCoordinator.organization,
-            phone: mockCoordinator.phone || '',
-            email: mockCoordinator.email || '',
-            notes: mockCoordinator.notes || ''
+            name: '',
+            organization: '',
+            phone: '',
+            email: '',
+            notes: ''
           });
         }
         
-        // Mock appointments for demonstration
-        const mockAppointments: Appointment[] = [
-          {
-            id: '1',
-            title: 'Initial Plan Meeting',
-            date: '2025-04-20',
-            time: '10:00',
-            provider: 'Jane Smith',
-            location: 'NDIS Office, 123 Main Street',
-            status: 'scheduled',
-            notes: 'Discuss plan implementation and service provider options'
-          },
-          {
-            id: '2',
-            title: 'Service Provider Introduction',
-            date: '2025-04-25',
-            time: '14:30',
-            provider: 'Jane Smith',
-            location: 'Sunshine Support Services Office',
-            status: 'scheduled',
-            notes: 'Meet with potential service provider for personal care'
-          },
-          {
-            id: '3',
-            title: 'Plan Review Preparation',
-            date: '2025-05-15',
-            time: '11:00',
-            provider: 'Jane Smith',
-            location: 'Video Call',
-            status: 'scheduled',
-            notes: 'Prepare documentation for upcoming plan review'
-          },
-          {
-            id: '4',
-            title: 'Monthly Check-in',
-            date: '2025-03-15',
-            time: '09:30',
-            provider: 'Jane Smith',
-            location: 'Phone Call',
-            status: 'completed',
-            notes: 'Regular monthly check-in to discuss progress and any issues'
-          },
-          {
-            id: '5',
-            title: 'Equipment Assessment',
-            date: '2025-03-05',
-            time: '13:00',
-            provider: 'Jane Smith',
-            location: 'Home Visit',
-            status: 'completed',
-            notes: 'Assessment for new mobility equipment needs'
-          }
-        ];
-        
-        setAppointments(mockAppointments);
+        // Load appointments from Supabase
+        const { data: appointmentsData, error: appointmentsError } = await supabase
+          .from('ndis_appointments')
+          .select('*')
+          .eq('user_id', user.id);
+        if (appointmentsError) throw appointmentsError;
+        setAppointments(appointmentsData || []);
       } catch (err) {
         console.error('Error loading support coordination data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load support coordination data');
