@@ -2,29 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-idecide-light text-idecide-dark;
+  }
 }
 
-/* Custom scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
-}
+@layer components {
+  .btn-primary {
+    @apply bg-idecide-primary text-idecide-dark px-4 py-2 rounded-lg hover:bg-idecide-primary-hover transition-colors;
+  }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
+  .btn-outline {
+    @apply border border-idecide-primary text-idecide-dark px-4 py-2 rounded-lg hover:bg-idecide-primary hover:text-idecide-dark transition-colors;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #B5D3D3;
-  border-radius: 4px;
-}
+  .card {
+    @apply bg-white rounded-xl border border-idecide-primary shadow-sm hover:shadow-md transition-shadow;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #85B1B1;
+  .input {
+    @apply w-full p-2 border border-idecide-primary rounded-lg focus:ring-2 focus:ring-idecide-primary focus:border-transparent;
+  }
+
+  .sidebar {
+    @apply bg-idecide-primary;
+  }
+
+  .nav-item {
+    @apply px-4 py-3 flex items-center gap-3 transition-colors text-idecide-dark hover:bg-white/50;
+  }
+
+  .nav-item-active {
+    @apply bg-white font-medium;
+  }
 }

@@ -4,9 +4,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#2D5959',
-        secondary: '#B5D3D3',
-        accent: '#85B1B1',
+        idecide: {
+          primary: '#abd3d2',        // Light mint green
+          secondary: '#a0b4ae',      // Sage green
+          accent: '#172241',         // Dark navy (for contrast)
+          light: '#f9f9f9',          // Off-white
+          dark: '#2D3B38',           // Dark green-gray
+          'primary-hover': '#9bc3c2', // Slightly darker mint green
+          'accent-hover': '#0e1a38',  // Darker navy
+          'secondary-hover': '#91a59f', // Darker sage green
+          'success': '#4ade80',       // Success green
+          'warning': '#facc15',       // Warning yellow
+          'error': '#f87171',         // Error red
+          'info': '#60a5fa',          // Info blue
+        },
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+        'slide-in': 'slideIn 0.3s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
     },
   },
