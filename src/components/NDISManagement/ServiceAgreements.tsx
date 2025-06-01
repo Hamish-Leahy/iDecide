@@ -16,7 +16,9 @@ import {
   Download, 
   Share2, 
   ChevronRight
-} from 'lucide-react';
+} 
+
+from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../common/Card';
@@ -104,26 +106,7 @@ export function ServiceAgreements() {
           ndis_number: item.ndis_number || ''
         }));
         
-        // If no participants found, create sample participants
-        const finalParticipants = transformedParticipants.length > 0 
-          ? transformedParticipants 
-          : [
-              {
-                id: '1',
-                name: 'John Smith',
-                ndis_number: 'NDIS12345678'
-              },
-              {
-                id: '2',
-                name: 'Emma Wilson',
-                ndis_number: 'NDIS87654321'
-              },
-              {
-                id: '3',
-                name: 'Michael Chen',
-                ndis_number: 'NDIS23456789'
-              }
-            ];
+
         
         setParticipants(finalParticipants);
         

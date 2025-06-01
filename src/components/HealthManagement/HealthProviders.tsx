@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Modal } from '../common/Modal';
-import { SearchInput } from '../common/SearchInput';
+import { SearchIn,.put } from '../common/SearchInput';
 import { motion } from 'framer-motion';
 
 interface HealthProvider {

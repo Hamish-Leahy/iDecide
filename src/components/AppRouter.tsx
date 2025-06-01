@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthPage } from './AuthPage';
 import { OnboardingFlow } from './OnboardingFlow';
 import Dashboard from './Dashboard';
 import { LoadingScreen } from './LoadingScreen';
+import { travelRoutes } from './routes/travelRoutes';
 
+// Need to clean this function up later. 
 export function AppRouter() {
   const { user, loading, profile } = useAuth();
 
@@ -31,6 +33,22 @@ export function AppRouter() {
         <Route 
           path="/dashboard/*" 
           element={needsOnboarding ? <Navigate to="/onboarding" replace /> : <Dashboard />} 
+        />
+        <Route 
+          path="/travel/*" 
+          element={
+            needsOnboarding ? (
+              <Navigate to="/onboarding" replace />
+            ) : (
+              <Suspense fallback={<LoadingScreen />}>
+                <Routes>
+                  {travelRoutes.map((route) => (
+                    <Route key={route.path} path={route.path} element={route.element} />
+                  ))}
+                </Routes>
+              </Suspense>
+            )
+          }
         />
         <Route 
           path="/" 

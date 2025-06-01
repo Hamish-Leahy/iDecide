@@ -13,7 +13,8 @@ import {
   Phone,
   MapPin,
   Calendar
-} from 'lucide-react';
+} 
+from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../common/Card';
